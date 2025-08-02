@@ -297,8 +297,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                             child: TextFormField(
                                               controller:
                                                   _phoneOrUsernameController,
-                                              focusNode: _phoneFocusNode,
-                                              keyboardType: TextInputType.phone,
+                                                      focusNode: _phoneFocusNode,
+                                              keyboardType: TextInputType.emailAddress,
                                               textAlign: TextAlign.right,
                                               style:
                                                   const TextStyle(fontSize: 16),
@@ -348,15 +348,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                             ),
                                           ),
                                           // Password input
-                                          Expanded(
-                                            child: TextFormField(
-                                              controller: _passwordController,
-                                              focusNode: _passwordFocusNode,
-                                              obscureText: _isPasswordHidden,
-                                              textAlign: TextAlign.right,
-                                              style:
-                                                  const TextStyle(fontSize: 16),
-                                              decoration: const InputDecoration(
+                          Expanded(
+                            child: TextFormField(
+                              controller: _passwordController,
+                              focusNode: _passwordFocusNode,
+                              obscureText: _isPasswordHidden,
+                              keyboardType: TextInputType.emailAddress,
+                              textAlign: TextAlign.right,
+                              style:
+                                  const TextStyle(fontSize: 16),
+                              decoration: const InputDecoration(
                                                 hintText: 'كلمة المرور',
                                                 hintStyle: TextStyle(
                                                   color: Colors.grey,

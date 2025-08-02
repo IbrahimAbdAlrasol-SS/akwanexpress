@@ -113,14 +113,6 @@ class NotificationDetailsScreen extends StatelessWidget {
                     Gap(AppSpaces.medium),
 
                     // Notification details cards
-                    _buildDetailCard(
-                      context,
-                      "رقم الإشعار",
-                      notification.id ?? "غير محدد",
-                      CupertinoIcons.number,
-                    ),
-
-                    Gap(AppSpaces.small),
 
                     _buildDetailCard(
                       context,
@@ -167,26 +159,9 @@ class NotificationDetailsScreen extends StatelessWidget {
                       ),
                     ],
 
-                    if (notification.helperId != null) ...[
-                      Gap(AppSpaces.small),
-                      _buildDetailCard(
-                        context,
-                        "معرف المساعد",
-                        notification.helperId!,
-                        CupertinoIcons.person_badge_plus,
-                      ),
-                    ],
 
-                    Gap(AppSpaces.small),
 
-                    _buildDetailCard(
-                      context,
-                      "حالة القراءة",
-                      notification.isRead == true ? "مقروء" : "غير مقروء",
-                      notification.isRead == true
-                          ? CupertinoIcons.checkmark_circle_fill
-                          : CupertinoIcons.circle,
-                    ),
+
 
                     Gap(12),
                   ],
