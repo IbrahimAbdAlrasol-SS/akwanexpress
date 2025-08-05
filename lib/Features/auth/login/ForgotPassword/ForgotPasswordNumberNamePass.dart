@@ -56,6 +56,7 @@ class _LoginPageState extends ConsumerState<ForgotPasswordNumberNamePass> {
                     crossAxisAlignment:
                         CrossAxisAlignment.start, // محاذاة النصوص لليمين
                     children: [
+                      const Gap(40), // إضافة مسافة لتحريك اللوجو للأسفل
                       SafeArea(
                         child: Padding(
                           padding: const EdgeInsets.only(right: 20),
@@ -91,15 +92,17 @@ class _LoginPageState extends ConsumerState<ForgotPasswordNumberNamePass> {
                       children: [
                         const CustomAppBar(
                           padding: EdgeInsets.zero,
-                          title: 'اكتب رقم هاتفك و سنرسل اليك رمز تحقق',
+                          title: 'تغيير كلمة المرور',
                           showBackButton: true,
+                          titleColor: Color(0xFF1A66FF),
                         ),
+                        Gap(10),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 8.0),
                           child: CustomTextFormField(
                             // controller: passwordController,
                             radius: 16,
-                            label: "الرمز السري",
+                            label: "كلمة المرور الجديدة",
                             obscureText: true,
                             prefixInner: Icon(
                               CupertinoIcons.lock,
@@ -107,7 +110,7 @@ class _LoginPageState extends ConsumerState<ForgotPasswordNumberNamePass> {
                             ),
                           ),
                         ),
-                        const Gap(AppSpaces.exSmall),
+                        const Gap(10),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 8.0),
                           child: CustomTextFormField(
@@ -121,6 +124,25 @@ class _LoginPageState extends ConsumerState<ForgotPasswordNumberNamePass> {
                             ),
                           ),
                         ),
+                        const Gap(350),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8.0),
+                              child: FillButton(
+                                label: "تأكيد الرمز السري",
+                                // width: 415,
+                                borderRadius: 16,
+                                height: 50,
+                                onPressed: () {
+                                  context.push(AppRoutes.ForgotPasswordAuth);
+                                },
+                              ),
+                            ),
+                          ],
+                        )
                       ],
                     ),
                   ),

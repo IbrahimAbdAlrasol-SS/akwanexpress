@@ -4,6 +4,7 @@ import 'package:Tosell/Features/home/screens/vip/new_map_screen.dart';
 import 'package:Tosell/Features/order/screens/order_details_screen.dart';
 import 'package:Tosell/Features/shipments/providers/shipments_provider.dart';
 import 'package:Tosell/Features/shipments/widgets/order_card_item.dart';
+import 'package:Tosell/core/helpers/hubMethods.dart';
 import 'package:Tosell/core/router/app_router.dart';
 import 'package:Tosell/core/utils/extensions.dart';
 import 'package:Tosell/core/widgets/CustomAppBar.dart';
@@ -21,54 +22,64 @@ import 'package:go_router/go_router.dart';
 
 class NewShipmentsNotificationScreen extends ConsumerStatefulWidget {
   const NewShipmentsNotificationScreen({
-
     super.key,
   });
 
-
   @override
   ConsumerState<ConsumerStatefulWidget> createState() =>
-
       _NewShipmentsNotificationScreenState();
 }
 
 class _NewShipmentsNotificationScreenState
-
     extends ConsumerState<NewShipmentsNotificationScreen> {
   List<bool> isLoading = [];
+
   @override
+  void initState() {
+    super.initState();
+    // طلب الطلبات القريبة عند فتح الشاشة
+    _requestNearbyShipments();
 
+    // إضافة مستمع لتغيير الموقع
+    currentLocationNotifier.addListener(_handleLocationChange);
+  }
+
+  @override
+  void dispose() {
+    // إزالة المستمع عند إغلاق الشاشة
+    currentLocationNotifier.removeListener(_handleLocationChange);
+    super.dispose();
+  }
+
+  void _requestNearbyShipments() {
+    invokeNearbyShipment();
+  }
+
+  void _handleLocationChange() {
+    ShipmentDataManager.forceRefreshShipments();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (isLoading.length != unAssignedShipmentsNotifier.value.length) {
-      isLoading =
-          List.generate(unAssignedShipmentsNotifier.value.length, (_) => false);
-    }
     return Scaffold(
-
       backgroundColor: Colors.transparent,
       body: SafeArea(
-
         child: Padding(
           padding: const EdgeInsets.only(top: AppSpaces.large),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-
             children: [
               const Gap(5),
               const Padding(
-
                 padding: EdgeInsets.all(8.0),
                 child: CustomAppBar(
                   title: 'إشعارات الطلبات الجديدة',
-       
-           showBackButton: true,
+                  showBackButton: true,
                 ),
               ),
               _buildUi(),
-
             ],
           ),
-
         ),
       ),
     );
@@ -76,29 +87,35 @@ class _NewShipmentsNotificationScreenState
 
   Expanded _buildUi() {
     return Expanded(
-      child: ListView.builder(
-        itemCount: unAssignedShipmentsNotifier.value.length,
+      child: ValueListenableBuilder<List<ShipmentInMap>>(
+        valueListenable: unAssignedShipmentsNotifier,
+        builder: (context, unAssignedShipments, child) {
+          if (isLoading.length != unAssignedShipments.length) {
+            isLoading = List.generate(unAssignedShipments.length, (_) => false);
+          }
 
-        itemBuilder: (context, index) {
-          var shipment = unAssignedShipmentsNotifier.value[index];
-   
-       return Padding(
-            padding: const EdgeInsets.only(bottom: 8.0),
-            child: buildShipmentNotificationCart(
-              context,
-              shipment: shipment,
-              ref: ref,
-              index: index,
-              isLoading: isLoading[index],
-            ),
-
+          return ListView.builder(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12.0),
+            itemCount: unAssignedShipments.length,
+            itemBuilder: (context, index) {
+              var shipment = unAssignedShipments[index];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12.0),
+                child: buildShipmentNotificationCart(
+                  context,
+                  shipment: shipment,
+                  ref: ref,
+                  index: index,
+                  isLoading: isLoading[index],
+                ),
+              );
+            },
           );
         },
       ),
-
     );
   }
-
 
   Widget buildShipmentNotificationCart(
     BuildContext context, {
@@ -110,14 +127,12 @@ class _NewShipmentsNotificationScreenState
     return Container(
       decoration: BoxDecoration(
         color: context.colorScheme.surface,
-
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: context.colorScheme.outline),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10),
-   
-     child: Column(
+        child: Column(
           children: [
             Padding(
               padding: const EdgeInsets.only(right: 12.0),
@@ -125,11 +140,9 @@ class _NewShipmentsNotificationScreenState
                 children: [
                   SvgPicture.asset(
                     'assets/svg/notification-01.svg',
-
                     color: context.colorScheme.primary,
                   ),
                   const Gap(7),
-
                   Text(
                     'وصل طلب جديد، يلا نتحرك',
                     style: context.textTheme.titleMedium!.copyWith(
@@ -150,7 +163,6 @@ class _NewShipmentsNotificationScreenState
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Column(
-
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     buildAvatar(
@@ -176,8 +188,7 @@ class _NewShipmentsNotificationScreenState
                     ),
                     Gap(10.h),
                   ],
-      
-          ),
+                ),
               ),
             ),
             Row(
@@ -194,7 +205,8 @@ class _NewShipmentsNotificationScreenState
                         .watch(shipmentsNotifierProvider.notifier)
                         .assign(shipmentId: shipment.id ?? '');
                     _setLoadingState(false, index: index);
-                    _setLoadingState(false, index: index);
+                    // طلب تحديث الطلبات بعد قبول الطلب
+                    ShipmentDataManager.immediateRefreshShipments();
                   },
                 ),
                 OutlinedCustomButton(
@@ -212,7 +224,6 @@ class _NewShipmentsNotificationScreenState
                       } else {
                         print('❌ لا يوجد موقع استحصال متاح');
                         ScaffoldMessenger.of(context).showSnackBar(
-
                           const SnackBar(
                             content: Text('لا يوجد موقع متاح لعرض المسار'),
                             backgroundColor: Colors.red,
@@ -244,8 +255,6 @@ class _NewShipmentsNotificationScreenState
     });
   }
 }
-
-                 
 
 Padding buildAvatar(BuildContext context,
     {required String title, required String subtitle, required String icon}) {

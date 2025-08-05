@@ -24,10 +24,31 @@ class _VipHomeScreenState extends State<VipHomeScreen> {
   @override
   void initState() {
     super.initState();
+    // طلب الطلبات القريبة عند فتح الشاشة
+    _requestNearbyShipments();
+
+    // إضافة مستمع لتغيير الموقع
+    currentLocationNotifier.addListener(_handleLocationChange);
+
     // تحديد الموقع الحالي عند فتح التطبيق
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _getCurrentLocation();
     });
+  }
+
+  @override
+  void dispose() {
+    // إزالة المستمع عند إغلاق الشاشة
+    currentLocationNotifier.removeListener(_handleLocationChange);
+    super.dispose();
+  }
+
+  void _requestNearbyShipments() {
+    invokeNearbyShipment();
+  }
+
+  void _handleLocationChange() {
+    _requestNearbyShipments();
   }
 
   Future<void> _getCurrentLocation() async {

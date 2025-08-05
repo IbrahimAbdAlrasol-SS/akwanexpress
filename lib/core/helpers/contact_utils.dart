@@ -7,15 +7,35 @@ import 'package:Tosell/core/utils/extensions.dart';
 class ContactUtils {
   /// Launch WhatsApp with a phone number
   static Future<void> openWhatsApp(String phoneNumber) async {
-    final cleaned = phoneNumber.replaceAll(RegExp(r'\D'), '');
-    final formatted = cleaned.startsWith('964') ? cleaned : '964$cleaned';
+    try {
+      final cleaned = phoneNumber.replaceAll(RegExp(r'\D'), '');
+      if (cleaned.isEmpty) {
+        throw Exception('رقم الهاتف غير صالح');
+      }
+      
+      final formatted = cleaned.startsWith('964') ? cleaned : '964$cleaned';
+      print('🔗 محاولة فتح الواتساب للرقم: $formatted');
 
-    final url = Uri.parse("https://wa.me/$formatted");
+      // Try WhatsApp app first
+      final whatsappUrl = Uri.parse("whatsapp://send?phone=$formatted");
+      if (await canLaunchUrl(whatsappUrl)) {
+        print('✅ تطبيق الواتساب متاح، جاري الفتح...');
+        await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
+        return;
+      }
 
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
-    } else {
-      throw Exception('Could not launch WhatsApp');
+      // Try WhatsApp web as fallback
+      final webUrl = Uri.parse("https://wa.me/$formatted");
+      if (await canLaunchUrl(webUrl)) {
+        print('✅ واتساب ويب متاح، جاري الفتح...');
+        await launchUrl(webUrl, mode: LaunchMode.externalApplication);
+        return;
+      }
+
+      throw Exception('لا يمكن فتح الواتساب');
+    } catch (e) {
+      print('❌ خطأ في فتح الواتساب: $e');
+      rethrow;
     }
   }
 

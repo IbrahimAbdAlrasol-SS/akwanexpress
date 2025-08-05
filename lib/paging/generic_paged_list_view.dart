@@ -82,6 +82,7 @@ class _GenericPagedListViewState<T> extends State<GenericPagedListView<T>> {
       },
       child: PagedListView<int, T>(
         pagingController: _pagingController,
+        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
         builderDelegate: PagedChildBuilderDelegate<T>(
           itemBuilder: widget.itemBuilder,
           firstPageErrorIndicatorBuilder: (_) =>

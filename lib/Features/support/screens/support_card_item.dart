@@ -20,76 +20,97 @@ class SupportCardItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap ?? () => context.push(AppRoutes.chat, extra: ticket.id),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: context.colorScheme.outline),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Icon
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  color: context.colorScheme.secondary,
-                ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: GestureDetector(
+        onTap: onTap ?? () => context.push(AppRoutes.chat, extra: ticket.id),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: context.colorScheme.outline),
+            color: context.colorScheme.surface,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
-              const SizedBox(width: 8),
-
-              // Expanded Content
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'الزبون يرفض استلام الطلب ويكول مو إله.',
-                      style: context.textTheme.titleMedium!.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Text(
-                          'لايوجد',
-                          style: context.textTheme.bodyMedium,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          width: 6,
-                          height: 6,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: context.colorScheme.outline,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'لايوجد',
-                          style: context.textTheme.bodyMedium,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(width: 12),
-
-              // Status
-              buildTicketState(1),
             ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Icon
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    color: context.colorScheme.primary.withOpacity(0.1),
+                    border: Border.all(
+                      color: context.colorScheme.primary.withOpacity(0.2),
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.support_agent,
+                    color: context.colorScheme.primary,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+
+                // Expanded Content
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        ticket.subject ?? 'بدون عنوان',
+                        style: context.textTheme.titleMedium!.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        ticket.description ?? 'بدون وصف',
+                        style: context.textTheme.bodyMedium?.copyWith(
+                          color: context.colorScheme.secondary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 2,
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.confirmation_number_outlined,
+                            size: 16,
+                            color: context.colorScheme.secondary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'رقم التذكرة: ${ticket.id?.substring(0, 8) ?? 'غير محدد'}',
+                            style: context.textTheme.bodySmall?.copyWith(
+                              color: context.colorScheme.secondary,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(width: 12),
+
+                // Status
+                buildTicketState(ticket.status ?? 0),
+              ],
+            ),
           ),
         ),
       ),
@@ -97,20 +118,45 @@ class SupportCardItem extends StatelessWidget {
   }
 }
 
-Widget buildTicketState(int index) {
-  return Padding(
-    padding: const EdgeInsets.all(8.0),
-    child: Container(
-      width: 100,
-      height: 26,
-      decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Center(
-        child: Text(
-          'مفتوح',
-        ),
+Widget buildTicketState(int status) {
+  String statusText;
+  Color statusColor;
+
+  switch (status) {
+    case 0:
+      statusText = 'مفتوح';
+      statusColor = Colors.blue;
+      break;
+    case 1:
+      statusText = 'قيد المعالجة';
+      statusColor = Colors.orange;
+      break;
+    case 2:
+      statusText = 'مغلق';
+      statusColor = Colors.green;
+      break;
+    case 3:
+      statusText = 'ملغي';
+      statusColor = Colors.red;
+      break;
+    default:
+      statusText = 'غير محدد';
+      statusColor = Colors.grey;
+  }
+
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+    decoration: BoxDecoration(
+      color: statusColor.withOpacity(0.1),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: statusColor.withOpacity(0.3)),
+    ),
+    child: Text(
+      statusText,
+      style: TextStyle(
+        color: statusColor,
+        fontWeight: FontWeight.bold,
+        fontSize: 12,
       ),
     ),
   );

@@ -10,7 +10,9 @@ import 'package:Tosell/Features/notification/models/notifications.dart';
 import 'package:Tosell/Features/shipments/screens/shipment/delivery_shipment_details.dart';
 import 'package:Tosell/Features/shipments/screens/shipment/refound_shipment_details.dart';
 import 'package:Tosell/Features/support/screens/chat/chat_screen.dart';
+import 'package:Tosell/Features/support/screens/chat/auto_chat_screen.dart';
 import 'package:Tosell/Features/support/screens/ticket_screen.dart';
+import 'package:Tosell/Features/support/screens/create_ticket_screen.dart';
 import 'package:Tosell/Features/shipments/screens/shipment/pickup_shipment_details_Screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -120,6 +122,21 @@ final GoRouter appRouter = GoRouter(
         ),
       ),
     ),
+
+    GoRoute(
+      path: AppRoutes.autoChat,
+      builder: (context, state) => const BackgroundWrapper(
+        child: AutoChatScreen(),
+      ),
+    ),
+
+    GoRoute(
+      path: AppRoutes.createTicket,
+      builder: (context, state) => const BackgroundWrapper(
+        child: CreateTicketScreen(),
+      ),
+    ),
+
     GoRoute(
       path: AppRoutes.logout,
       builder: (context, state) => const LogoutScreen(),
@@ -295,6 +312,8 @@ class AppRoutes {
   static const String chats = '/chats';
   static const String register = '/register';
   static const String chat = '/chat';
+  static const String autoChat = '/auto-chat';
+  static const String createTicket = '/create-ticket';
   static const String orderDetails = '/order-details';
   // static const String home = '/home';
   static const String vipHome = '/vip_home';

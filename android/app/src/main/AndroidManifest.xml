@@ -7,6 +7,11 @@
     <!-- Internet permission -->
     <uses-permission android:name="android.permission.INTERNET" />
     
+    <!-- Phone and URL permissions -->
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+    <uses-permission android:name="android.permission.CALL_PRIVILEGED" />
+    <uses-permission android:name="android.permission.SEND_SMS" />
+    
     <application
         android:label="akwanexpress"
         android:name="${applicationName}"

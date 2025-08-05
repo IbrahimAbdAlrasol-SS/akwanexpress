@@ -10,12 +10,14 @@ import 'package:Tosell/Features/shipments/widgets/order_card_item.dart';
 import 'package:Tosell/core/constants/spaces.dart';
 import 'package:Tosell/core/helpers/contact_utils.dart';
 import 'package:Tosell/core/helpers/formater.dart';
+import 'package:Tosell/core/helpers/hubMethods.dart';
 import 'package:Tosell/core/utils/GlobalToast.dart';
 import 'package:Tosell/core/utils/extensions.dart';
 import 'package:Tosell/core/widgets/CustomAppBar.dart';
 import 'package:Tosell/core/widgets/FillButton.dart';
 import 'package:Tosell/core/widgets/OutlineButton.dart';
 import 'package:Tosell/core/widgets/custom_section.dart';
+import 'package:Tosell/Features/home/providers/nearby_shipments_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:gap/gap.dart';
@@ -49,6 +51,31 @@ class _VipOrderScreenState extends ConsumerState<VipOrderScreen> {
   bool hasInitialized = false;
 
   @override
+  void initState() {
+    super.initState();
+    // طلب الطلبات القريبة عند فتح الشاشة
+    _requestNearbyShipments();
+
+    // إضافة مستمع لتغيير الموقع
+    currentLocationNotifier.addListener(_handleLocationChange);
+  }
+
+  @override
+  void dispose() {
+    // إزالة المستمع عند إغلاق الشاشة
+    currentLocationNotifier.removeListener(_handleLocationChange);
+    super.dispose();
+  }
+
+  void _requestNearbyShipments() {
+    invokeNearbyShipment();
+  }
+
+  void _handleLocationChange() {
+    _requestNearbyShipments();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final orderAsync =
         ref.watch(getOrderByIdAndShipmentIdVipProvider(widget.args));
@@ -80,7 +107,80 @@ class _VipOrderScreenState extends ConsumerState<VipOrderScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
+            // شريط علوي مع زر الرجوع وزر التواصل مع الدعم
             SafeArea(
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // زر الرجوع
+                    GestureDetector(
+                      onTap: () => Navigator.of(context).pop(),
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: context.colorScheme.surface,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: context.colorScheme.outline.withOpacity(0.3),
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.arrow_back_ios_new,
+                          color: context.colorScheme.primary,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                    // زر التواصل مع الدعم
+                    GestureDetector(
+                      onTap: () {
+                        // فتح الواتساب للتواصل مع الدعم
+                        ContactUtils.openWhatsApp(
+                            '+9647700000000'); // رقم الدعم
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: context.colorScheme.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: context.colorScheme.primary.withOpacity(0.3),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.support_agent,
+                              color: context.colorScheme.primary,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'الدعم',
+                              style: TextStyle(
+                                color: context.colorScheme.primary,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // كرد معلومات الطلب مع padding
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: CustomSection(
                 title: "معلومات الطلب",
                 icon: SvgPicture.asset(
@@ -117,8 +217,18 @@ class _VipOrderScreenState extends ConsumerState<VipOrderScreen> {
                 ],
               ),
             ),
-            buildUserInfo(context, order, isCustomer: !isPickup),
-            if (!isPickup) buildInvoice(context, order),
+            // كرد معلومات التاجر/الزبون مع padding وتكبير الطول
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 1.0),
+              child: buildUserInfo(context, order, isCustomer: !isPickup),
+            ),
+            if (!isPickup)
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 1.0),
+                child: buildInvoice(context, order),
+              ),
           ],
         ),
       ),
@@ -158,102 +268,95 @@ class _VipOrderScreenState extends ConsumerState<VipOrderScreen> {
                       setState(() {
                         isPickup = false;
                       });
+                      // طلب تحديث الطلبات بعد تحديث الحالة
+                      _requestNearbyShipments();
                     }
                   },
                 )
-              : Row(
-                  children: [
-                    Expanded(
-                      child: FillButton(
-                        label: 'تم التسليم',
-                        borderRadius: 16,
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            barrierDismissible: false,
-                            builder: (context) {
-                              return Dialog(
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16)),
-                                insetPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 24),
-                                child: ConstrainedBox(
-                                  constraints: const BoxConstraints(
-                                    minWidth: double.infinity,
+              : SizedBox(
+                  width: double.infinity,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: double.infinity,
+                        child: FillButton(
+                          label: 'تم التسليم',
+                          borderRadius: 16,
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (context) {
+                                return Dialog(
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16)),
+                                  insetPadding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 24),
+                                  child: ConstrainedBox(
+                                    constraints: const BoxConstraints(
+                                      minWidth: double.infinity,
+                                    ),
+                                    child: SingleChildScrollView(
+                                      padding: EdgeInsets.zero,
+                                      child: OtpDialog(
+                                        args: OtpDialogArgs(
+                                          order: order,
+                                          shipmentId: widget.args.shipmentId,
+                                        ),
+                                      ),
+                                    ),
                                   ),
-                                  child: SingleChildScrollView(
-                                    padding: EdgeInsets.zero,
-                                    child: OtpDialog(
-                                      args: OtpDialogArgs(
-                                        order: order,
+                                );
+                              },
+                            ).then((result) {
+                              // طلب تحديث الطلبات بعد إغلاق الحوار
+                              if (result != null) {
+                                _requestNearbyShipments();
+                              }
+                            });
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedCustomButton(
+                          label: 'مؤجل / راجع',
+                          borderRadius: 16,
+                          borderColor: context.colorScheme.error,
+                          textColor: context.colorScheme.error,
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (context) {
+                                return Dialog(
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16)),
+                                  insetPadding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 24),
+                                  child: IntrinsicHeight(
+                                    child: SingleChildScrollView(
+                                      child: DelayOrReturnDialog(
+                                        orderId: widget.args.id,
                                         shipmentId: widget.args.shipmentId,
                                       ),
                                     ),
                                   ),
-                                ),
-                              );
-                            },
-                          );
-                          // showDialog(
-                          //   context: context,
-                          //   barrierDismissible: false,
-                          //   builder: (context) => Dialog(
-                          //     shape: RoundedRectangleBorder(
-                          //       borderRadius: BorderRadius.circular(16),
-                          //     ),
-                          //     insetPadding:
-                          //         const EdgeInsets.symmetric(horizontal: 24),
-                          //     child: OtpDialog(
-                          //       args: OtpDialogArgs(
-                          //         order: order,
-                          //         shipmentId: widget.args.shipmentId,
-                          //       ),
-                          //     ),
-                          //   ),
-                          // );
-                        },
+                                );
+                              },
+                            ).then((result) {
+                              // طلب تحديث الطلبات بعد إغلاق الحوار
+                              if (result != null) {
+                                _requestNearbyShipments();
+                              }
+                            });
+                          },
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: OutlinedCustomButton(
-                        label: 'مؤجل / راجع',
-                        borderRadius: 16,
-                        borderColor: context.colorScheme.error,
-                        textColor: context.colorScheme.error,
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            barrierDismissible: false,
-                            builder: (context) {
-                              return Dialog(
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16)),
-                                insetPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 24),
-                                child: IntrinsicHeight(
-                                  child: SingleChildScrollView(
-                                    child: DelayOrReturnDialog(
-                                      orderId: widget.args.id,
-                                      shipmentId: widget.args.shipmentId,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                          // showDialog(
-                          //   context: context,
-                          //   barrierDismissible: false,
-                          //   builder: (context) => DelayOrReturnDialog(
-                          //     orderId: order.id ?? '',
-                          //     shipmentId: widget.args.shipmentId,
-                          //   ),
-                          // );
-                        },
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
         ),
       ),
@@ -273,7 +376,7 @@ CustomSection buildUserInfo(BuildContext context, Order order,
     childrenRadius: const BorderRadius.all(Radius.circular(16)),
     children: [
       Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 3),
+        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
         child: Column(
           children: [
             CustomAppBar(
@@ -304,100 +407,155 @@ CustomSection buildUserInfo(BuildContext context, Order order,
                 height: 40,
               ),
             ),
-            const Gap(AppSpaces.small),
+            const Gap(AppSpaces.medium),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                OutlinedCustomButton(
-                  label: 'هاتف',
-                  fontSize: 12,
-                  borderRadius: 16,
-                  textColor: const Color(0xff034EC9),
-                  borderColor: const Color(0xff034EC9),
-                  reverse: true,
-                  icon: const Icon(
-                    Icons.phone,
-                    color: Color(0xff034EC9),
+                Expanded(
+                  child: OutlinedCustomButton(
+                    label: '',
+                    fontSize: 12,
+                    borderRadius: 16,
+                    textColor: const Color(0xff034EC9),
+                    borderColor: const Color(0xff034EC9),
+                    reverse: true,
+                    icon: const Icon(
+                      Icons.phone,
+                      color: Color(0xff034EC9),
+                    ),
+                    onPressed: isCustomer
+                        ? () async {
+                            try {
+                              await ContactUtils.makeCall(
+                                  order.customerPhoneNumber ?? '');
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('فشل في الاتصال: ${e.toString()}'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          }
+                        : () async {
+                            try {
+                              await ContactUtils.makeCall(
+                                  order.merchant?.phoneNumber ?? '');
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('فشل في الاتصال: ${e.toString()}'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          },
                   ),
-                  onPressed: isCustomer
-                      ? () =>
-                          ContactUtils.makeCall(order.customerPhoneNumber ?? '')
-                      : () => ContactUtils.makeCall(
-                          order.merchant?.phoneNumber ?? ''),
                 ),
-                OutlinedCustomButton(
-                  label: 'واتساب',
-                  fontSize: 12,
-                  textColor: const Color(0xff33CC34),
-                  borderRadius: 16,
-                  borderColor: const Color(0xff33CC34),
-                  reverse: true,
-                  icon: SvgPicture.asset(
-                    'assets/svg/social-whats-app-svgrepo-com.svg',
-                    color: const Color(0xff33CC34),
-                    width: 20,
+                const Gap(8),
+                Expanded(
+                  child: OutlinedCustomButton(
+                    label: '',
+                    fontSize: 12,
+                    textColor: const Color(0xff33CC34),
+                    borderRadius: 16,
+                    borderColor: const Color(0xff33CC34),
+                    reverse: true,
+                    icon: SvgPicture.asset(
+                      'assets/svg/social-whats-app-svgrepo-com.svg',
+                      color: const Color(0xff33CC34),
+                      height: 20,
+                    ),
+                    onPressed: isCustomer
+                        ? () async {
+                            try {
+                              await ContactUtils.openWhatsApp(
+                                  order.customerPhoneNumber ?? '');
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('فشل في فتح الواتساب: ${e.toString()}'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          }
+                        : () async {
+                            try {
+                              await ContactUtils.openWhatsApp(
+                                  order.merchant?.phoneNumber ?? '');
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('فشل في فتح الواتساب: ${e.toString()}'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          },
                   ),
-                  onPressed: isCustomer
-                      ? () => ContactUtils.openWhatsApp(
-                          order.customerPhoneNumber ?? '')
-                      : () => ContactUtils.openWhatsApp(
-                          order.merchant?.phoneNumber ?? ''),
                 ),
-                OutlinedCustomButton(
-                  label: 'المسار',
-                  fontSize: 12,
-                  textColor: const Color(0xff21B0F8),
-                  borderRadius: 16,
-                  borderColor: const Color(0xff21B0F8),
-                  reverse: true,
-                  icon: SvgPicture.asset(
-                    'assets/svg/waze-stroke-rounded.svg',
-                    color: const Color(0xff21B0F8),
-                  ),
-                  onPressed: () async {
-                    try {
-                      if (isCustomer) {
-                        if (order.deliveryLocation != null) {
-                          print('🚀 الضغط على زر المسار - موقع التوصيل للزبون');
-                          await ContactUtils.openInWaze(
-                              order.deliveryLocation!);
+                const Gap(8),
+                Expanded(
+                  child: OutlinedCustomButton(
+                    label: '',
+                    fontSize: 12,
+                    textColor: const Color(0xff21B0F8),
+                    borderRadius: 16,
+                    borderColor: const Color(0xff21B0F8),
+                    reverse: true,
+                    icon: SvgPicture.asset(
+                      'assets/svg/waze-stroke-rounded.svg',
+                      color: const Color(0xff21B0F8),
+                    
+                    ),
+                    onPressed: () async {
+                      try {
+                        if (isCustomer) {
+                          if (order.deliveryLocation != null) {
+                            print(
+                                '🚀 الضغط على زر المسار - موقع التوصيل للزبون');
+                            await ContactUtils.openInWaze(
+                                order.deliveryLocation!);
+                          } else {
+                            print('❌ لا يوجد موقع توصيل للزبون');
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('لا يوجد موقع توصيل متاح'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
                         } else {
-                          print('❌ لا يوجد موقع توصيل للزبون');
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('لا يوجد موقع توصيل متاح'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
+                          if (order.pickupLocation != null) {
+                            print(
+                                '� الضغط على زر المسار - موقع الاستحصال للتاجر');
+                            await ContactUtils.openInWaze(
+                                order.pickupLocation!);
+                          } else {
+                            print('❌ لا يوجد موقع استحصال للتاجر');
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('لا يوجد موقع استحصال متاح'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
                         }
-                      } else {
-                        if (order.pickupLocation != null) {
-                          print(
-                              '🚀 الضغط على زر المسار - موقع الاستحصال للتاجر');
-                          await ContactUtils.openInWaze(order.pickupLocation!);
-                        } else {
-                          print('❌ لا يوجد موقع استحصال للتاجر');
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('لا يوجد موقع استحصال متاح'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
+                      } catch (e) {
+                        print('❌ خطأ في فتح المسار: $e');
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('فشل في فتح تطبيق الخرائط'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
                       }
-                    } catch (e) {
-                      print('❌ خطأ في فتح المسار: $e');
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('فشل في فتح تطبيق الخرائط'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  },
+                    },
+                  ),
                 ),
               ],
-            )
+            ),
           ],
         ),
       ),

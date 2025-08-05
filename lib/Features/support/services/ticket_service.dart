@@ -61,4 +61,23 @@ class TicketService {
       rethrow;
     }
   }
+
+  Future<ApiResponse<Ticket>?> createGeneralTicket({
+    required String subject,
+    required String description,
+  }) async {
+    try {
+      var result = await baseClient.create(
+        endpoint: '/ticket/by-user',
+        data: {
+          'subject': subject,
+          'description': description,
+        },
+      );
+
+      return result;
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

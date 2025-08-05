@@ -69,10 +69,14 @@ class _LoginPageState extends ConsumerState<ForgotPasswordNum> {
                     crossAxisAlignment:
                         CrossAxisAlignment.start, // محاذاة النصوص لليمين
                     children: [
+                      const Gap(40), // إضافة مسافة لتحريك اللوجو للأسفل
                       SafeArea(
                         child: Padding(
                           padding: const EdgeInsets.only(right: 20),
-                          child: SvgPicture.asset("assets/svg/logo-2.svg"),
+                          child: SvgPicture.asset(
+                            "assets/svg/logo-2.svg",
+                            height: 60,
+                          ),
                         ),
                       ),
                     ],
@@ -106,17 +110,144 @@ class _LoginPageState extends ConsumerState<ForgotPasswordNum> {
                           padding: EdgeInsets.zero,
                           title: 'اكتب رقم هاتفك و سنرسل اليك رمز تحقق',
                           showBackButton: true,
+                          titleColor: Color(0xFF1A66FF),
                         ),
-                        const Padding(
-                          padding: EdgeInsets.only(right: 8, left: 8, top: 16),
-                          child: CustomTextFormField(
-                            radius: 16,
-                            label: "رقم الهاتف ",
-                            hint: "07xx Xxx Xxx",
-                            keyboardType: TextInputType.phone,
+                        Gap(10),
+                        Padding(
+                          padding:
+                              const EdgeInsets.only(right: 8, left: 8, top: 16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "رقم الهاتف",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              const Gap(8),
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: Colors.grey[300]!),
+                                ),
+                                child: Row(
+                                  children: [
+                                    // Country code with Iraqi flag
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16, vertical: 16),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          // Iraqi flag
+                                          Container(
+                                            width: 28,
+                                            height: 20,
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(3),
+                                              border: Border.all(
+                                                color: Colors.grey[300]!,
+                                                width: 0.5,
+                                              ),
+                                            ),
+                                            child: ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(3),
+                                              child: Stack(
+                                                children: [
+                                                  // Flag stripes
+                                                  Column(
+                                                    children: [
+                                                      // Red stripe
+                                                      Expanded(
+                                                        child: Container(
+                                                          color: const Color(
+                                                              0xFFCE1126),
+                                                        ),
+                                                      ),
+                                                      // White stripe
+                                                      Expanded(
+                                                        child: Container(
+                                                          color: Colors.white,
+                                                        ),
+                                                      ),
+                                                      // Black stripe
+                                                      Expanded(
+                                                        child: Container(
+                                                          color: Colors.black,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  // Arabic text "الله أكبر" in the center
+                                                  Center(
+                                                    child: Text(
+                                                      'الله أكبر',
+                                                      style: TextStyle(
+                                                        color: const Color(
+                                                            0xFF007A3D),
+                                                        fontSize: 6,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                          const Gap(8),
+                                          const Text(
+                                            '+964',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                          const Gap(4),
+                                          Icon(
+                                            Icons.keyboard_arrow_down,
+                                            size: 20,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    // Phone number input
+                                    Expanded(
+                                      child: TextFormField(
+                                        keyboardType: TextInputType.phone,
+                                        textAlign: TextAlign.right,
+                                        style: const TextStyle(fontSize: 16),
+                                        decoration: const InputDecoration(
+                                          hintText: '7xxx xxx xxx',
+                                          hintStyle: TextStyle(
+                                            color: Colors.grey,
+                                            fontSize: 16,
+                                          ),
+                                          border: InputBorder.none,
+                                          contentPadding: EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 16,
+                                          ),
+                                        ),
+                                        validator: (value) => value!.isEmpty
+                                            ? "الرجاء إدخال رقم الهاتف"
+                                            : null,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        const Gap(430),
+                        const Gap(440),
                         Column(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [

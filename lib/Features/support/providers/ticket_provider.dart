@@ -37,6 +37,16 @@ class TicketNotifier extends _$TicketNotifier {
     ));
   }
 
+  Future<ApiResponse<Ticket>?> createGeneralTicket({
+    required String subject,
+    required String description,
+  }) async {
+    return (await _service.createGeneralTicket(
+      subject: subject,
+      description: description,
+    ));
+  }
+
   @override
   FutureOr<ApiResponse<Ticket>?> build() async {
     return await getAll();

@@ -119,21 +119,20 @@ class CustomAppBar extends StatelessWidget {
                                 ),
                       ),
                       if (subtitle != null)
-                        Row(
-                          textDirection: TextDirection.ltr,
-                          spacing: 30.w,
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Text(
+                              subtitle ?? "",
+                              style: subTitleStyle ??
+                                  Theme.of(context).textTheme.titleMedium!,
+                            ),
                             if (secondSubtitle != null)
                               Text(
                                 secondSubtitle ?? "",
                                 style: subTitleStyle ??
                                     Theme.of(context).textTheme.titleMedium!,
                               ),
-                            Text(
-                              subtitle ?? "",
-                              style: subTitleStyle ??
-                                  Theme.of(context).textTheme.titleMedium!,
-                            ),
                           ],
                         ),
                     ],

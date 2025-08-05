@@ -401,6 +401,37 @@ class _MyProfileScreenState extends ConsumerState<MyProfileScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 8),
                             child: Divider(color: context.colorScheme.outline),
                           ),
+                          // تواصل مع الدعم
+                          InkWell(
+                            onTap: () {
+                              context.push(AppRoutes.createTicket);
+                            },
+                            borderRadius: BorderRadius.circular(8),
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 8.0),
+                              child: Row(
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.all(12.0),
+                                    child: SvgPicture.asset(
+                                      'assets/svg/support.svg',
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                      width: 24,
+                                      height: 24,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Text('تواصل مع الدعم'),
+                                ],
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: Divider(color: context.colorScheme.outline),
+                          ),
                           // تسجيل الخروج - تحسين الحساسية
                           InkWell(
                             onTap: () => showModalBottomSheet(

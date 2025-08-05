@@ -3,6 +3,8 @@ import 'package:Tosell/Features/support/screens/support_tab.dart';
 import 'package:flutter/material.dart';
 import 'package:Tosell/core/utils/extensions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:Tosell/core/router/app_router.dart';
 
 class TicketScreen extends ConsumerStatefulWidget {
   const TicketScreen({super.key});

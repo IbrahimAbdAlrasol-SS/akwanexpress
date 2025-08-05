@@ -63,13 +63,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           children: [
             // Blue gradient background
             Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 290, // تحديد ارتفاع الخلفية الزرقاء
               child: Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Color(0xFF034EC9),
+                      Color(0xFF3E7EFF),
                       Color(0xFF0056D6),
                     ],
                   ),
@@ -77,14 +81,29 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               ),
             ),
 
+            // Background SVG pattern
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 290,
+              child: Container(
+                child: SvgPicture.asset(
+                  "assets/svg/bg.svg",
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                ),
+              ),
+            ),
+
             // Decorative circles
-            _buildDecorativeCircles(),
 
             // Main content
             Column(
               children: [
                 // Top section with logo and text
-                const Gap(50),
+                const Gap(30),
                 SafeArea(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -92,7 +111,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Gap(1),
+                        const Gap(20),
                         // Logo with enhanced styling
                         SvgPicture.asset(
                           "assets/svg/logo-2.svg",
@@ -297,8 +316,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                             child: TextFormField(
                                               controller:
                                                   _phoneOrUsernameController,
-                                                      focusNode: _phoneFocusNode,
-                                              keyboardType: TextInputType.emailAddress,
+                                              focusNode: _phoneFocusNode,
+                                              keyboardType:
+                                                  TextInputType.emailAddress,
                                               textAlign: TextAlign.right,
                                               style:
                                                   const TextStyle(fontSize: 16),
@@ -348,16 +368,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                             ),
                                           ),
                                           // Password input
-                          Expanded(
-                            child: TextFormField(
-                              controller: _passwordController,
-                              focusNode: _passwordFocusNode,
-                              obscureText: _isPasswordHidden,
-                              keyboardType: TextInputType.emailAddress,
-                              textAlign: TextAlign.right,
-                              style:
-                                  const TextStyle(fontSize: 16),
-                              decoration: const InputDecoration(
+                                          Expanded(
+                                            child: TextFormField(
+                                              controller: _passwordController,
+                                              focusNode: _passwordFocusNode,
+                                              obscureText: _isPasswordHidden,
+                                              keyboardType:
+                                                  TextInputType.emailAddress,
+                                              textAlign: TextAlign.right,
+                                              style:
+                                                  const TextStyle(fontSize: 16),
+                                              decoration: const InputDecoration(
                                                 hintText: 'كلمة المرور',
                                                 hintStyle: TextStyle(
                                                   color: Colors.grey,
@@ -426,12 +447,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
                                     // Spacer to push button to bottom
                                     SizedBox(
-                                        height: isKeyboardVisible ? 20 : 60),
+                                        height: isKeyboardVisible ? 20 : 230),
 
                                     // Login button
                                     SizedBox(
                                       width: double.infinity,
-                                      height: 56,
+                                      height: 50,
                                       child: ElevatedButton(
                                         onPressed: loginState.isLoading
                                             ? null
@@ -458,17 +479,25 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                                     if (result.$2 ==
                                                         "ACCOUNT_PENDING_ACTIVATION") {
                                                       // الحساب في انتظار التفعيل
+                                                      _showSuccessSnackBar(
+                                                          'تم تسجيل الدخول بنجاح، يرجى تفعيل حسابك');
                                                       context.go(
                                                           '/pending-activation');
                                                     } else {
                                                       // الحساب نشط - حفظ بيانات المستخدم والانتقال للصفحة الرئيسية
+                                                      _showSuccessSnackBar(
+                                                          'مرحباً بك! تم تسجيل الدخول بنجاح');
                                                       SharedPreferencesHelper
                                                           .saveUser(result.$1!);
                                                       context.go(
                                                           AppRoutes.vipHome);
                                                     }
+                                                  } else {
+                                                    // تسجيل الدخول فشل
+                                                    _showErrorSnackBar(result
+                                                            .$2 ??
+                                                        'حدث خطأ في تسجيل الدخول');
                                                   }
-                                                  // في حالة الفشل، سيتم عرض الخطأ تلقائياً من خلال AsyncValue
                                                 }
                                               },
                                         style: ElevatedButton.styleFrom(
@@ -478,7 +507,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                           elevation: 0,
                                           shape: RoundedRectangleBorder(
                                             borderRadius:
-                                                BorderRadius.circular(12),
+                                                BorderRadius.circular(24),
                                           ),
                                         ),
                                         child: loginState.isLoading
@@ -508,7 +537,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                     Center(
                                       child: Row(
                                         mainAxisAlignment:
-                                            MainAxisAlignment.center,
+                                            MainAxisAlignment.start,
                                         children: [
                                           Text(
                                             'ليس لديك حساب؟',
@@ -520,7 +549,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                           const Gap(4),
                                           GestureDetector(
                                             onTap: () {
-                                              //  context.go(AppRoutes.registerScreen);
+                                              context.go(AppRoutes.register);
                                             },
                                             child: Text(
                                               'إنشاء حساب',
@@ -556,34 +585,75 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 
-  Widget _buildDecorativeCircles() {
-    return Stack(
-      children: [
-        Positioned(
-          top: -100,
-          right: -100,
-          child: Container(
-            width: 200,
-            height: 200,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withOpacity(0.1),
+  // دالة إظهار إشعار النجاح
+  void _showSuccessSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(
+              Icons.check_circle,
+              color: Colors.white,
+              size: 24,
             ),
-          ),
-        ),
-        Positioned(
-          top: 150,
-          left: -80,
-          child: Container(
-            width: 160,
-            height: 160,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withOpacity(0.08),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
-          ),
+          ],
         ),
-      ],
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 4),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        margin: const EdgeInsets.all(16),
+        elevation: 6,
+      ),
+    );
+  }
+
+  // دالة إظهار إشعار الخطأ
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(
+              Icons.error,
+              color: Colors.white,
+              size: 24,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 4),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        margin: const EdgeInsets.all(16),
+        elevation: 6,
+      ),
     );
   }
 }

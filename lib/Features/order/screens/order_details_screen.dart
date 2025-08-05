@@ -7,7 +7,6 @@ import 'package:Tosell/Features/shipments/models/Shipment.dart';
 import 'package:Tosell/Features/shipments/providers/orders_provider.dart';
 import 'package:Tosell/Features/shipments/providers/shipments_provider.dart';
 import 'package:Tosell/Features/support/providers/ticket_provider.dart';
-import 'package:Tosell/Features/support/screens/add_ticket_dailog.dart';
 import 'package:Tosell/core/router/app_router.dart';
 import 'package:Tosell/core/utils/GlobalToast.dart';
 import 'package:gap/gap.dart';
@@ -102,7 +101,6 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                                   ),
                                   child: const SingleChildScrollView(
                                     padding: EdgeInsets.zero,
-                                    child: AddTicketDialog(),
                                   ),
                                 ),
                               );

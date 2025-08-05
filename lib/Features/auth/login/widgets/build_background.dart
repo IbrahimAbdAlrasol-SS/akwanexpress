@@ -1,62 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
-Widget buildBackground({Widget? child, double height = 360}) {
+Widget buildBackground({Widget? child, double height = 350}) {
   return Stack(
     children: [
+      // Blue gradient background
       Container(
         width: double.infinity,
         height: height,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Color(0xFF034EC9),
-              Color(0xFF034EC9),
+              Color(0xFF3E7EFF),
+              Color(0xFF00297A),
               // Color(0xFF16CA8B),
               // Color(0xFF109365),
             ],
-            begin: Alignment.topCenter, // التدرج من الأعلى
-            end: Alignment.bottomCenter, // إلى الأسفل
-            stops: [0.0, 0.8], // توزيع التدرج (اختياري)
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            stops: [0.0, 0.8],
           ),
         ),
       ),
-      buildCircle(
-        top: -180,
-        right: -180,
+
+      // SVG background pattern overlay
+      Positioned.fill(
+        child: Opacity(
+          opacity: 0.3, // شفافية للنمط ليظهر مع الخلفية الزرقاء
+          child: SvgPicture.asset(
+            "assets/svg/bg.svg",
+            fit: BoxFit.cover,
+          ),
+        ),
       ),
-      buildCircle(
-        top: 200,
-        left: -180,
-      ),
+
       if (child != null) child
     ],
-  );
-}
-
-Positioned buildCircle({
-  double? bottom,
-  double? left,
-  double? right,
-  double? top,
-  double? circleWidth = 400,
-  double? circleHeight = 320,
-  bool isFirstCircle = true, // إضافة معامل لتحديد اللون
-}) {
-  return Positioned(
-    bottom: bottom,
-    left: left,
-    right: right,
-    top: top,
-    child: Container(
-      width: circleWidth,
-      height: circleHeight,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: isFirstCircle
-            ? const Color.fromARGB(24, 55, 38, 82)
-            : const Color.fromARGB(32, 110, 76, 61),
-      ),
-    ),
   );
 }

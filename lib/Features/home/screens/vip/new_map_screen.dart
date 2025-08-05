@@ -7,6 +7,7 @@ import 'package:Tosell/Features/shipments/widgets/order_card_item.dart';
 import 'package:Tosell/Features/shipments/widgets/shipment_cart_item.dart';
 import 'package:Tosell/core/constants/spaces.dart';
 import 'package:Tosell/core/helpers/contact_utils.dart';
+import 'package:Tosell/core/helpers/hubMethods.dart';
 import 'package:Tosell/core/router/app_router.dart';
 import 'package:Tosell/core/utils/GlobalToast.dart';
 import 'package:Tosell/core/utils/extensions.dart';
@@ -60,23 +61,46 @@ class _MapScreenState extends ConsumerState<NewMapScreen> {
     // Post-frame callback ensures FlutterMap is rendered first
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _tryCenterMap(selectedShipment?.pickUpLocation);
+      // استدعاء الطلبات القريبة عند فتح الشاشة لأول مرة
+      _requestNearbyShipments();
     });
 
     assignedShipmentsNotifier.addListener(_handleAssignedChange);
     unAssignedShipmentsNotifier.addListener(_handleUnassignedChange);
+
+    // الاستماع لتغييرات الموقع واستدعاء الطلبات القريبة
+    currentLocationNotifier.addListener(_handleLocationChange);
+  }
+
+  void _handleLocationChange() {
+    // استدعاء الطلبات القريبة عند تغيير الموقع
+    _requestNearbyShipments();
+  }
+
+  Future<void> _requestNearbyShipments() async {
+    try {
+      await invokeNearbyShipment();
+      print('📤 تم طلب الطلبات القريبة');
+    } catch (e) {
+      print('❌ خطأ في طلب الطلبات القريبة: $e');
+    }
   }
 
   void _handleAssignedChange() {
     if (!mounted) return;
-
     final assigned = assignedShipmentsNotifier.value;
     if (assigned.isNotEmpty) {
       selectedShipment = assigned.first;
       _tryCenterMap(assigned.first.pickUpLocation);
     } else {
+      // إذا لم تكن هناك طلبات مقبولة، تحقق من الطلبات غير المقبولة
       final unassigned = unAssignedShipmentsNotifier.value;
-      selectedShipment = unassigned.firstOrNull;
-      _tryCenterMap(unassigned.firstOrNull?.pickUpLocation);
+      if (unassigned.isNotEmpty) {
+        selectedShipment = unassigned.first;
+        _tryCenterMap(unassigned.first.pickUpLocation);
+      } else {
+        selectedShipment = null;
+      }
     }
 
     initializesValues();
@@ -87,12 +111,17 @@ class _MapScreenState extends ConsumerState<NewMapScreen> {
     if (!mounted) return;
     final assigned = assignedShipmentsNotifier.value;
     final unassigned = unAssignedShipmentsNotifier.value;
-    if (assigned.isEmpty) {
-      // final unassigned = unAssignedShipmentsNotifier.value;
-      selectedShipment = unassigned.firstOrNull;
-      _tryCenterMap(unassigned.firstOrNull?.pickUpLocation);
-      initializesValues();
 
+    // إذا لم تكن هناك طلبات مقبولة، استخدم أول طلب غير مقبول
+    if (assigned.isEmpty && unassigned.isNotEmpty) {
+      selectedShipment = unassigned.first;
+      _tryCenterMap(unassigned.first.pickUpLocation);
+      initializesValues();
+      if (mounted) setState(() {});
+    }
+    // إذا لم تكن هناك طلبات على الإطلاق
+    else if (assigned.isEmpty && unassigned.isEmpty) {
+      selectedShipment = null;
       if (mounted) setState(() {});
     }
   }
@@ -119,6 +148,7 @@ class _MapScreenState extends ConsumerState<NewMapScreen> {
   void dispose() {
     assignedShipmentsNotifier.removeListener(_handleAssignedChange);
     unAssignedShipmentsNotifier.removeListener(_handleUnassignedChange);
+    currentLocationNotifier.removeListener(_handleLocationChange);
     super.dispose();
   }
 
@@ -240,12 +270,14 @@ class _MapScreenState extends ConsumerState<NewMapScreen> {
                     valueListenable: unAssignedShipmentsNotifier,
                     builder: (context, unAssignedShipments, child) {
                       // تحديث selectedShipment بناءً على القيم الجديدة
-                      final currentSelectedShipment = assignedShipments.firstOrNull ?? 
-                                                     unAssignedShipments.firstOrNull;
-                      
+                      final currentSelectedShipment =
+                          assignedShipments.firstOrNull ??
+                              unAssignedShipments.firstOrNull;
+
                       // تحديث isAssigned بناءً على الطلبات المقبولة
-                      final currentIsAssigned = assignedShipments.contains(currentSelectedShipment);
-                      
+                      final currentIsAssigned =
+                          assignedShipments.contains(currentSelectedShipment);
+
                       return Container(
                         width: double.infinity,
                         decoration: BoxDecoration(
@@ -265,14 +297,16 @@ class _MapScreenState extends ConsumerState<NewMapScreen> {
                                     const Gap(20),
                                     Text(
                                       'ماكو طلبات حالياً',
-                                      style: context.textTheme.titleMedium!.copyWith(
+                                      style: context.textTheme.titleMedium!
+                                          .copyWith(
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
                                     const Gap(5),
                                     Text(
                                       'رح توصلك إشعارات أول ما ينزل طلب جديد، خلّيك جاهز',
-                                      style: context.textTheme.titleMedium!.copyWith(
+                                      style: context.textTheme.titleMedium!
+                                          .copyWith(
                                         color: context.colorScheme.secondary,
                                         fontSize: 14,
                                       ),
@@ -282,284 +316,327 @@ class _MapScreenState extends ConsumerState<NewMapScreen> {
                                 ),
                               )
                             : Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (currentSelectedShipment != null)
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                  top: 8.0, right: 18.0, left: 18.0),
-                              child: currentIsAssigned
-                                  ? Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          currentSelectedShipment?.code ?? 'لايوجد ',
-                                          style: context.textTheme.titleMedium!
-                                              .copyWith(
-                                            color: context.colorScheme.primary,
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                        ),
-                                        buildShipmentStatus(
-                                            currentSelectedShipment!.status!,
-                                            currentSelectedShipment!.type!),
-                                      ],
-                                    )
-                                  : Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Icon(
-                                              Icons.notifications_outlined,
-                                              color:
-                                                  context.colorScheme.primary,
-                                            ),
-                                            SizedBox(
-                                              width: 5.w,
-                                            ),
-                                            Padding(
-                                              padding: const EdgeInsets.only(
-                                                  top: 4.0),
-                                              child: Text(
-                                                'وصل طلب جديد، يلا نتحرك',
-                                                style: context
-                                                    .textTheme.titleMedium!
-                                                    .copyWith(
-                                                  color: context
-                                                      .colorScheme.primary,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (currentSelectedShipment != null)
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                          top: 8.0, right: 18.0, left: 18.0),
+                                      child: currentIsAssigned
+                                          ? Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Text(
+                                                  currentSelectedShipment
+                                                          ?.code ??
+                                                      'لايوجد ',
+                                                  style: context
+                                                      .textTheme.titleMedium!
+                                                      .copyWith(
+                                                    color: context
+                                                        .colorScheme.primary,
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
                                                 ),
-                                              ),
+                                                buildShipmentStatus(
+                                                    currentSelectedShipment!
+                                                        .status!,
+                                                    currentSelectedShipment!
+                                                        .type!),
+                                              ],
+                                            )
+                                          : Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    Icon(
+                                                      Icons
+                                                          .notifications_outlined,
+                                                      color: context
+                                                          .colorScheme.primary,
+                                                    ),
+                                                    SizedBox(
+                                                      width: 5.w,
+                                                    ),
+                                                    Padding(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                              top: 4.0),
+                                                      child: Text(
+                                                        'وصل طلب جديد، يلا نتحرك',
+                                                        style: context.textTheme
+                                                            .titleMedium!
+                                                            .copyWith(
+                                                          color: context
+                                                              .colorScheme
+                                                              .primary,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Text(
+                                                  '40 دقيقة',
+                                                  style: context
+                                                      .textTheme.titleMedium!
+                                                      .copyWith(
+                                                    color: context
+                                                        .colorScheme.secondary,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                          ],
-                                        ),
-                                        Text(
-                                          '40 دقيقة',
-                                          style: context.textTheme.titleMedium!
-                                              .copyWith(
-                                            color:
-                                                context.colorScheme.secondary,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ],
                                     ),
-                            ),
-                          Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 18.0),
-                            child: Divider(
-                              color: context.colorScheme.secondary
-                                  .withOpacity(0.5),
-                            ),
-                          ),
-                          buildAvatar(
-                            context,
-                            title: 'نقطة الاستحصال',
-                            subtitle:
-                                '${currentSelectedShipment?.pickUpZone?.name} ${currentSelectedShipment?.pickUpZone?.governorate?.name}',
-                            icon: '',
-                          ),
-                          if (!currentIsAssigned)
-                            Wrap(
-                              children: [
-                                Padding(
-                                  padding:
-                                      const EdgeInsets.only(top: 3, right: 22),
-                                  child:
-                                      SvgPicture.asset('assets/svg/Line 1.svg'),
-                                ),
-                                buildAvatar(
-                                  context,
-                                  title: 'نقطة التوصيل',
-                                  subtitle:
-                                      '${currentSelectedShipment?.deliveryZone?.name} ${currentSelectedShipment?.deliveryZone?.governorate?.name} ',
-                                  icon: '',
-                                ),
-                              ],
-                            ),
-                          const Gap(AppSpaces.small),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              Container(
-                                width: 150.w,
-                                height: 48,
-                                child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: currentIsAssigned 
-                                        ? context.colorScheme.primary  // لون البرايمري لتفاصيل الطلب
-                                        : const Color(0xFF24A870),      // أخضر لقبول الطلب
-                                    foregroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 18.0),
+                                    child: Divider(
+                                      color: context.colorScheme.secondary
+                                          .withOpacity(0.5),
                                     ),
                                   ),
-                                  onPressed: isLoading
-                                      ? null
-                                      : currentIsAssigned
-                                          ? () {
-                                              _setLoadingState(true);
-                                              context.push(
-                                                AppRoutes.vipOrder,
-                                                extra: VipOrderArgs(
-                                                  id: currentSelectedShipment
-                                                          ?.order?.id ??
-                                                      '',
-                                                  shipmentId:
-                                                      currentSelectedShipment?.id ??
-                                                          '',
-                                                  isPickup: currentSelectedShipment?.isPickup ?? false,
+                                  buildAvatar(
+                                    context,
+                                    title: 'نقطة الاستحصال',
+                                    subtitle:
+                                        '${currentSelectedShipment?.pickUpZone?.name} ${currentSelectedShipment?.pickUpZone?.governorate?.name}',
+                                    icon: '',
+                                  ),
+                                  if (!currentIsAssigned)
+                                    Wrap(
+                                      children: [
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                              top: 3, right: 22),
+                                          child: SvgPicture.asset(
+                                              'assets/svg/Line 1.svg'),
+                                        ),
+                                        buildAvatar(
+                                          context,
+                                          title: 'نقطة التوصيل',
+                                          subtitle:
+                                              '${currentSelectedShipment?.deliveryZone?.name} ${currentSelectedShipment?.deliveryZone?.governorate?.name} ',
+                                          icon: '',
+                                        ),
+                                      ],
+                                    ),
+                                  const Gap(AppSpaces.small),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      Container(
+                                        width: 150.w,
+                                        height: 48,
+                                        child: ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: currentIsAssigned
+                                                ? context.colorScheme
+                                                    .primary // لون البرايمري لتفاصيل الطلب
+                                                : const Color(
+                                                    0xFF24A870), // أخضر لقبول الطلب
+                                            foregroundColor: Colors.white,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                          ),
+                                          onPressed: isLoading
+                                              ? null
+                                              : currentIsAssigned
+                                                  ? () {
+                                                      _setLoadingState(true);
+                                                      context.push(
+                                                        AppRoutes.vipOrder,
+                                                        extra: VipOrderArgs(
+                                                          id: currentSelectedShipment
+                                                                  ?.order?.id ??
+                                                              '',
+                                                          shipmentId:
+                                                              currentSelectedShipment
+                                                                      ?.id ??
+                                                                  '',
+                                                          isPickup:
+                                                              currentSelectedShipment
+                                                                      ?.isPickup ??
+                                                                  false,
+                                                        ),
+                                                      );
+                                                      _setLoadingState(false);
+                                                    }
+                                                  : () async {
+                                                      _setLoadingState(true);
+                                                      var result = await ref
+                                                          .read(
+                                                              shipmentsNotifierProvider
+                                                                  .notifier)
+                                                          .assign(
+                                                              shipmentId:
+                                                                  currentSelectedShipment
+                                                                          ?.id ??
+                                                                      '');
+                                                      _setLoadingState(false);
+                                                      if (result.$1 != null) {
+                                                        if (mounted) {
+                                                          setState(() {
+                                                            isAssigned = true;
+                                                          });
+                                                        }
+                                                        GlobalToast.show(
+                                                          context: context,
+                                                          message:
+                                                              "تم تحديث الحالة",
+                                                          backgroundColor:
+                                                              context
+                                                                  .colorScheme
+                                                                  .primary,
+                                                          textColor:
+                                                              Colors.white,
+                                                        );
+                                                      } else {
+                                                        GlobalToast.show(
+                                                          context: context,
+                                                          message: result.$2 ??
+                                                              'حدث خطأ في قبول الطلبية ',
+                                                          backgroundColor:
+                                                              context
+                                                                  .colorScheme
+                                                                  .error,
+                                                          textColor:
+                                                              Colors.white,
+                                                        );
+                                                      }
+                                                    },
+                                          child: isLoading
+                                              ? const SizedBox(
+                                                  width: 20,
+                                                  height: 20,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                    strokeWidth: 2,
+                                                    valueColor:
+                                                        AlwaysStoppedAnimation<
+                                                                Color>(
+                                                            Colors.white),
+                                                  ),
+                                                )
+                                              : Text(
+                                                  currentIsAssigned
+                                                      ? 'تفاصيل الطلب'
+                                                      : 'قبول',
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                        ),
+                                      ),
+                                      Container(
+                                        width: 150.w,
+                                        height: 48,
+                                        child: OutlinedButton.icon(
+                                          style: OutlinedButton.styleFrom(
+                                            side: BorderSide(
+                                                color: context
+                                                    .colorScheme.onSurface),
+                                            foregroundColor:
+                                                context.colorScheme.onSurface,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                          ),
+                                          onPressed: () async {
+                                            try {
+                                              final currentIsPickup =
+                                                  currentSelectedShipment
+                                                          ?.isPickup ??
+                                                      false;
+                                              if (currentIsPickup) {
+                                                if (currentSelectedShipment
+                                                        ?.pickUpLocation !=
+                                                    null) {
+                                                  print(
+                                                      '🚀 الضغط على زر عرض المسار - موقع الاستحصال');
+                                                  await ContactUtils.openInWaze(
+                                                      currentSelectedShipment!
+                                                          .pickUpLocation!);
+                                                } else {
+                                                  print(
+                                                      '❌ لا يوجد موقع استحصال متاح');
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(
+                                                    const SnackBar(
+                                                      content: Text(
+                                                          'لا يوجد موقع استحصال متاح'),
+                                                      backgroundColor:
+                                                          Colors.red,
+                                                    ),
+                                                  );
+                                                }
+                                              } else {
+                                                if (currentSelectedShipment
+                                                        ?.deliveryLocation !=
+                                                    null) {
+                                                  print(
+                                                      '🚀 الضغط على زر عرض المسار - موقع التوصيل');
+                                                  await ContactUtils.openInWaze(
+                                                      currentSelectedShipment!
+                                                          .deliveryLocation!);
+                                                } else {
+                                                  print(
+                                                      '❌ لا يوجد موقع توصيل متاح');
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(
+                                                    const SnackBar(
+                                                      content: Text(
+                                                          'لا يوجد موقع توصيل متاح'),
+                                                      backgroundColor:
+                                                          Colors.red,
+                                                    ),
+                                                  );
+                                                }
+                                              }
+                                            } catch (e) {
+                                              print('❌ خطأ في فتح المسار: $e');
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                const SnackBar(
+                                                  content: Text(
+                                                      'فشل في فتح تطبيق الخرائط'),
+                                                  backgroundColor: Colors.red,
                                                 ),
                                               );
-                                              _setLoadingState(false);
                                             }
-                                          : () async {
-                                              _setLoadingState(true);
-                                              var result = await ref
-                                                  .read(
-                                                      shipmentsNotifierProvider
-                                                          .notifier)
-                                                  .assign(
-                                                      shipmentId:
-                                                          currentSelectedShipment
-                                                                  ?.id ??
-                                                              '');
-                                              _setLoadingState(false);
-                                              if (result.$1 != null) {
-                                                if (mounted) {
-                                                  setState(() {
-                                                    isAssigned = true;
-                                                  });
-                                                }
-                                                GlobalToast.show(
-                                                  context: context,
-                                                  message: "تم تحديث الحالة",
-                                                  backgroundColor: context
-                                                      .colorScheme.primary,
-                                                  textColor: Colors.white,
-                                                );
-                                              } else {
-                                                GlobalToast.show(
-                                                  context: context,
-                                                  message: result.$2 ??
-                                                      'حدث خطأ في قبول الطلبية ',
-                                                  backgroundColor:
-                                                      context.colorScheme.error,
-                                                  textColor: Colors.white,
-                                                );
-                                              }
-                                            },
-                                  child: isLoading
-                                      ? const SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            valueColor:
-                                                AlwaysStoppedAnimation<Color>(
-                                                    Colors.white),
+                                          },
+                                          icon: SvgPicture.asset(
+                                            'assets/svg/map.svg',
+                                            width: 20,
+                                            height: 20,
+                                            color:
+                                                context.colorScheme.onSurface,
                                           ),
-                                        )
-                                      : Text(
-                                          currentIsAssigned ? 'تفاصيل الطلب' : 'قبول',
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w600,
+                                          label: Text(
+                                            'عرض مسار',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              color:
+                                                  context.colorScheme.onSurface,
+                                            ),
                                           ),
                                         ),
-                                ),
+                                      ),
+                                    ],
+                                  ),
+                                  const Gap(AppSpaces.medium),
+                                ],
                               ),
-                              Container(
-                                width: 150.w,
-                                height: 48,           
-                                child: OutlinedButton.icon(
-                                  style: OutlinedButton.styleFrom(
-                                    side: BorderSide(
-                                        color: context.colorScheme.onSurface),
-                                    foregroundColor:
-                                        context.colorScheme.onSurface,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                  onPressed: () async {
-                                    try {
-                                      final currentIsPickup = currentSelectedShipment?.isPickup ?? false;
-                                      if (currentIsPickup) {
-                                        if (currentSelectedShipment?.pickUpLocation !=
-                                            null) {
-                                          print(
-                                              '🚀 الضغط على زر عرض المسار - موقع الاستحصال');
-                                          await ContactUtils.openInWaze(
-                                              currentSelectedShipment!
-                                                  .pickUpLocation!);
-                                        } else {
-                                          print('❌ لا يوجد موقع استحصال متاح');
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            const SnackBar(
-                                              content: Text(
-                                                  'لا يوجد موقع استحصال متاح'),
-                                              backgroundColor: Colors.red,
-                                            ),
-                                          );
-                                        }
-                                      } else {
-                                        if (currentSelectedShipment
-                                                ?.deliveryLocation !=
-                                            null) {
-                                          print(
-                                              '🚀 الضغط على زر عرض المسار - موقع التوصيل');
-                                          await ContactUtils.openInWaze(
-                                              currentSelectedShipment!
-                                                  .deliveryLocation!);
-                                        } else {
-                                          print('❌ لا يوجد موقع توصيل متاح');
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            const SnackBar(
-                                              content: Text(
-                                                  'لا يوجد موقع توصيل متاح'),
-                                              backgroundColor: Colors.red,
-                                            ),
-                                          );
-                                        }
-                                      }
-                                    } catch (e) {
-                                      print('❌ خطأ في فتح المسار: $e');
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        const SnackBar(
-                                          content:
-                                              Text('فشل في فتح تطبيق الخرائط'),
-                                          backgroundColor: Colors.red,
-                                        ),
-                                      );
-                                    }
-                                  },
-                                  icon: SvgPicture.asset(
-                                    'assets/svg/map.svg',
-                                    width: 20,
-                                    height: 20,
-                                    color: context.colorScheme.onSurface,
-                                  ),
-                                  label: Text(
-                                    'عرض مسار',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      color: context.colorScheme.onSurface,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const Gap(AppSpaces.medium),
-                        ],
-                      ),
                       );
                     },
                   );

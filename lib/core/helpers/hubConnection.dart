@@ -3,6 +3,7 @@ import 'package:Tosell/Features/home/models/shipment_in_map.dart';
 import 'package:Tosell/Features/home/providers/nearby_shipments_provider.dart';
 import 'package:Tosell/core/Client/BaseClient.dart';
 import 'package:Tosell/core/helpers/sharedPreferencesHelper.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:signalr_core/signalr_core.dart';
 
@@ -56,7 +57,37 @@ Future<void> initSignalRConnection(ProviderContainer container) async {
           assignedShipmentsNotifier.value = assignedShipmentsResult;
           unAssignedShipmentsNotifier.value = unAssignedShipmentsResult;
 
-          print('');
+          // إجبار إشعار المستمعين
+          assignedShipmentsNotifier.notifyListeners();
+          unAssignedShipmentsNotifier.notifyListeners();
+
+          print('📦 تم استلام بيانات جديدة من SignalR:');
+          print('   - الطلبات المقبولة: ${assignedShipmentsResult.length}');
+          print(
+              '   - الطلبات غير المقبولة: ${unAssignedShipmentsResult.length}');
+
+          // طباعة تفاصيل الطلبات المقبولة
+          for (var shipment in assignedShipmentsResult) {
+            print(
+                '   📋 طلب مقبول: ${shipment.code} - الحالة: ${shipment.status}');
+          }
+
+          // طباعة تفاصيل الطلبات غير المقبولة
+          for (var shipment in unAssignedShipmentsResult) {
+            print(
+                '   📋 طلب غير مقبول: ${shipment.code} - الحالة: ${shipment.status}');
+          }
+
+          // إجبار تحديث الشاشات باستخدام عدة طرق
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            print('🔄 إجبار تحديث الشاشات...');
+            // إجبار إشعار المستمعين مرة أخرى بعد إطار واحد
+            assignedShipmentsNotifier.notifyListeners();
+            unAssignedShipmentsNotifier.notifyListeners();
+
+            // استخدام ShipmentDataManager للتحديث الفوري
+            ShipmentDataManager.immediateRefreshShipments();
+          });
         } catch (e, _) {
           print('❌ Error parsing shipment list: $e');
         }

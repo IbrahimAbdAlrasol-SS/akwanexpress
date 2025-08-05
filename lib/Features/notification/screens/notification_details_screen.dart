@@ -159,10 +159,6 @@ class NotificationDetailsScreen extends StatelessWidget {
                       ),
                     ],
 
-
-
-
-
                     Gap(12),
                   ],
                 ),

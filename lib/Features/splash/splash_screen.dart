@@ -78,17 +78,40 @@ class _SplashScreenState extends State<SplashScreen>
     Size size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: context.colorScheme.primary,
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: SvgPicture.asset(
-            'assets/svg/logo-2.svg',
-            width: size.width * 0.5,
-            height: size.height * 0.3,
-            fit: BoxFit.contain,
+      body: Stack(
+        children: [
+          // Gradient background
+          Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF3E7EFF), Color(0xFF732307)],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
           ),
-        ),
+          // Background SVG pattern
+          Positioned.fill(
+            child: SvgPicture.asset(
+              "assets/svg/bg.svg",
+              fit: BoxFit.cover,
+            ),
+          ),
+          // Logo in center
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: SvgPicture.asset(
+                'assets/svg/logo-2.svg',
+                width: size.width * 0.5,
+                height: size.height * 0.3,
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+        ],
       ),
       // body: Stack(
       //   children: [

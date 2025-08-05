@@ -25,8 +25,11 @@ class _SupportTabState extends ConsumerState<SupportTab>
     return GenericPagedListView<Ticket>(
       // noItemsFoundIndicatorBuilder: buildNoItemsFound(context),
       fetchPage: widget.fetchPage,
-      itemBuilder: (context, ticket, index) => SupportCardItem(
-        ticket: ticket,
+      itemBuilder: (context, ticket, index) => Padding(
+        padding: const EdgeInsets.only(bottom: 8.0),
+        child: SupportCardItem(
+          ticket: ticket,
+        ),
       ),
     );
   }

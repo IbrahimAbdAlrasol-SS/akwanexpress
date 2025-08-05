@@ -53,10 +53,14 @@ class _LoginPageState extends ConsumerState<ForgotPasswordAuth> {
                     crossAxisAlignment:
                         CrossAxisAlignment.start, // محاذاة النصوص لليمين
                     children: [
+                      const Gap(40), // إضافة مسافة لتحريك اللوجو للأسفل
                       SafeArea(
                         child: Padding(
                           padding: const EdgeInsets.only(right: 20),
-                          child: SvgPicture.asset("assets/svg/logo-2.svg"),
+                          child: SvgPicture.asset(
+                            "assets/svg/logo-2.svg",
+                            height: 60,
+                          ),
                         ),
                       ),
                     ],
@@ -90,7 +94,9 @@ class _LoginPageState extends ConsumerState<ForgotPasswordAuth> {
                           padding: EdgeInsets.zero,
                           title: 'اكتب رقم التحقق',
                           showBackButton: true,
+                          titleColor: Color(0xFF1A66FF),
                         ),
+                        Gap(10),
                         Padding(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 20.0, vertical: 8),
@@ -132,7 +138,7 @@ class _LoginPageState extends ConsumerState<ForgotPasswordAuth> {
                             ),
                           ),
                         ),
-                        const Gap(430),
+                        const Gap(440),
                         Column(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
@@ -140,7 +146,7 @@ class _LoginPageState extends ConsumerState<ForgotPasswordAuth> {
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 8.0),
                               child: FillButton(
-                                label: "ارسال رمز الـأكيد",
+                                label: "تأكيد الرمز",
                                 // width: 415,
                                 borderRadius: 16,
                                 height: 50,

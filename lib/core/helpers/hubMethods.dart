@@ -78,10 +78,15 @@ Future<void> sendLocationToSignalR(Position position) async {
 
 Future<void> invokeNearbyShipment() async {
   if (hubConnection.state == HubConnectionState.connected) {
+    print('📤 طلب الطلبات القريبة من الخادم...');
     await hubConnection.invoke(
       'NearbyShipments',
       args: [],
     );
+    print('✅ تم إرسال طلب الطلبات القريبة بنجاح');
+  } else {
+    print('🚫 لا يمكن طلب الطلبات القريبة - SignalR غير متصل');
+    print('   حالة الاتصال: ${hubConnection.state}');
   }
 }
 

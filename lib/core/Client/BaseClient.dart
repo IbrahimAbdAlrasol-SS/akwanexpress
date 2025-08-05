@@ -4,7 +4,7 @@ import 'package:Tosell/core/helpers/sharedPreferencesHelper.dart';
 import 'package:dio/dio.dart';
 
 // const imageUrl = "http://192.168.68.103:5051/";
-// const imageUrl = "https://api.akwanexpress.com/";
+//const imageUrl = "uat-api.akwanexpress.com";
 const imageUrl = "https://uat-api.akwanexpress.com/";
 const baseUrl = "$imageUrl" "api";
 

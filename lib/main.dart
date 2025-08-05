@@ -1,46 +1,46 @@
 import 'dart:io';
+import 'dart:async';
+import 'package:Tosell/core/helpers/SharedPreferencesHelper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
-
 import 'package:Tosell/core/router/app_router.dart';
 import 'package:Tosell/core/theme/app_theme.dart';
-import 'package:Tosell/core/helpers/sharedPreferencesHelper.dart';
+import 'package:Tosell/core/services/notification_service.dart';
 import 'package:Tosell/Features/home/providers/nearby_shipments_provider.dart';
 import 'package:Tosell/core/helpers/chat_hub_connection.dart';
 import 'package:Tosell/core/helpers/hubConnection.dart';
 import 'package:Tosell/core/helpers/hubMethods.dart';
 
+Timer? _periodicUpdateTimer;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
 
-  // Optional: Use this if you need to override certificate checks for dev APIs
-  // HttpOverrides.global = MyHttpOverrides();
-
-  // 🟢 OneSignal Init
+  // تهيئة OneSignal
   OneSignal.initialize("05ccd9f6-8cee-4750-a52c-46daba72fdc1");
   OneSignal.Notifications.requestPermission(true);
-
-  // Setup click listener
   OneSignal.Notifications.addClickListener((event) {
     final title = event.notification.title;
     final data = event.notification.additionalData;
     debugPrint('🟢 Notification Clicked: $title, Data: $data');
-    // TODO: Handle route navigation if needed
   });
 
-  // Determine start route
+  // تهيئة خدمة الإشعارات المحلية
+  await NotificationService().initialize();
+
   final token = (await SharedPreferencesHelper.getUser())?.token;
   initialLocation = token == null ? AppRoutes.login : AppRoutes.vipHome;
-
-  // SignalR initialization
   final container = ProviderContainer();
   await initSignalRConnection(container);
   await startSendingLiveLocation();
   await invokeNearbyShipment();
+
+  // بدء التحديث الدوري كل 30 ثانية
+  _startPeriodicUpdate();
 
   // Run app
   runApp(
@@ -57,6 +57,24 @@ Future<void> main() async {
       ),
     ),
   );
+}
+
+// دالة لبدء التحديث الدوري
+void _startPeriodicUpdate() {
+  _periodicUpdateTimer =
+      Timer.periodic(const Duration(seconds: 5), (timer) async {
+    try {
+      print('🔄 تحديث دوري للطلبات...');
+      await invokeNearbyShipment();
+    } catch (e) {
+      print('❌ خطأ في التحديث الدوري: $e');
+    }
+  });
+}
+
+void _stopPeriodicUpdate() {
+  _periodicUpdateTimer?.cancel();
+  _periodicUpdateTimer = null;
 }
 
 class MyApp extends ConsumerStatefulWidget {

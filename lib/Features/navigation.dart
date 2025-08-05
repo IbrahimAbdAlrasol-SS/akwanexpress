@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:Tosell/core/widgets/background_wrapper.dart';
 import 'package:Tosell/core/helpers/sharedPreferencesHelper.dart';
+import 'package:Tosell/Features/support/providers/chat_provider.dart';
 
 class NavigationPage extends ConsumerStatefulWidget {
   final Widget child;
@@ -21,7 +22,7 @@ class _NavigationPageState extends ConsumerState<NavigationPage> {
     AppRoutes.vipHome,
     AppRoutes.shipments,
     AppRoutes.notifications,
-    AppRoutes.ticket,
+    AppRoutes.ticket, // تغيير من ticket إلى createTicket
     AppRoutes.myProfile,
   ];
 
@@ -116,6 +117,46 @@ class _NavigationPageState extends ConsumerState<NavigationPage> {
                     BlendMode.srcIn,
                   ),
           ),
+          // إضافة مؤشر الرسائل غير المقروءة للتذاكر (index 3)
+          if (index == 3)
+            Consumer(
+              builder: (context, ref, child) {
+                final unreadCount = ref.watch(chatMessagesProvider.select(
+                  (messages) => messages.where((msg) {
+                    final notifier = ref.read(chatMessagesProvider.notifier);
+                    return !msg.isRead && !notifier.isMyMessage(msg);
+                  }).length,
+                ));
+
+                if (unreadCount == 0) return const SizedBox.shrink();
+
+                return Positioned(
+                  top: 0,
+                  right: 0,
+                  child: Container(
+                    padding: EdgeInsets.all(4.w),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(10.r),
+                      border: Border.all(color: Colors.white, width: 1.5.w),
+                    ),
+                    constraints: BoxConstraints(
+                      minWidth: 18.w,
+                      minHeight: 18.h,
+                    ),
+                    child: Text(
+                      unreadCount > 99 ? '99+' : unreadCount.toString(),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                );
+              },
+            ),
         ],
       ),
       label: label,
