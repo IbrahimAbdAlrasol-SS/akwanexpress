@@ -35,16 +35,11 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
     try {
       await _loadCurrentUser();
 
-      // تعيين التذكرة الحالية ومسح الرسائل السابقة
       final notifier = ref.read(chatMessagesProvider.notifier);
       await notifier.setCurrentTicket(widget.ticketId);
 
       await initialConnection();
-
-      // انتظار قصير للتأكد من تحميل الرسائل
       await Future.delayed(const Duration(seconds: 2));
-
-      // التحقق من وجود رسائل، وإذا لم توجد، حاول تحميلها مرة أخرى
       final messages = ref.read(chatMessagesProvider);
       if (messages.isEmpty) {
         print('⚠️ No messages loaded, retrying...');
@@ -66,7 +61,6 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
   }
 
   void _setupConnectionMonitoring() {
-    // مراقبة حالة الاتصال وإعادة الاتصال عند الحاجة
     Timer.periodic(const Duration(seconds: 30), (timer) {
       if (!mounted) {
         timer.cancel();
@@ -79,7 +73,6 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
           print('❌ Reconnection failed: $e');
         });
       } else {
-        // إذا كان الاتصال متاحاً، اطلب تحديث الرسائل
         print('🔄 Requesting chat history update...');
         requestChatHistory(widget.ticketId).catchError((e) {
           print('❌ Failed to request chat history update: $e');
@@ -126,13 +119,11 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
         await Future.delayed(const Duration(milliseconds: 300));
       }
 
-      // طلب تاريخ الدردشة
       if (!_isDisposed) {
         await requestChatHistory(widget.ticketId);
         print('✅ Requested chat history for ticket: ${widget.ticketId}');
       }
 
-      // انتظار قصير قبل تحديد الرسائل كمقروءة
       if (!_isDisposed) {
         await Future.delayed(const Duration(milliseconds: 300));
       }

@@ -41,7 +41,6 @@ class _MyProfileScreenState extends ConsumerState<MyProfileScreen> {
               profileState.when(
                 data: (userInfo) => Column(
                   children: [
-                    // صورة الحساب بالوسط في الأعلى
                     Center(
                       child: Container(
                         width: 120,
@@ -73,7 +72,6 @@ class _MyProfileScreenState extends ConsumerState<MyProfileScreen> {
                     ),
                     const Gap(AppSpaces.medium),
 
-                    // اسم الحساب
                     Text(
                       userInfo.fullName ?? '',
                       textAlign: TextAlign.right,
@@ -87,7 +85,6 @@ class _MyProfileScreenState extends ConsumerState<MyProfileScreen> {
                     ),
                     const Gap(AppSpaces.small),
 
-                    // الهاتف
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -105,7 +102,6 @@ class _MyProfileScreenState extends ConsumerState<MyProfileScreen> {
                     ),
                     const Gap(AppSpaces.small),
 
-                    // العنوان
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -336,20 +332,18 @@ class _MyProfileScreenState extends ConsumerState<MyProfileScreen> {
                         ],
                       ),
                       // إضافة "في الطريق إلى المخزن" في الأسفل
-                      Expanded(
-                        child: buildSection(
-                          "في الطريق إلى المخزن",
-                          subtitle: '0',
-                          margin: const EdgeInsets.symmetric(
-                              horizontal: 8.0, vertical: 4.0),
-                          "assets/svg/",
-                          showBorder: false,
-                          backgroundColor:
-                              const Color(0xffDDC73C).withOpacity(0.1),
-                          iconBackgroundColor: const Color(0xffDDC73C),
-                          theme,
-                          onTap: () {},
-                        ),
+                      buildSection(
+                        "في الطريق إلى المخزن",
+                        subtitle: '0',
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 8.0, vertical: 4.0),
+                        "assets/svg/Truck.svg",
+                        showBorder: false,
+                        backgroundColor:
+                            const Color(0xffDDC73C).withOpacity(0.1),
+                        iconBackgroundColor: const Color(0xffDDC73C),
+                        theme,
+                        onTap: () {},
                       ),
                     ],
                   ),

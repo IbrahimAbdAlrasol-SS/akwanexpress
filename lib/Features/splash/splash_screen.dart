@@ -47,9 +47,7 @@ class _SplashScreenState extends State<SplashScreen>
     _controller.forward();
 
     Timer(const Duration(seconds: 4), () {
-      // if (!showMapNotifier.value) {
       GoRouter.of(context).go(initialLocation);
-      // }
     });
   }
 
@@ -80,7 +78,6 @@ class _SplashScreenState extends State<SplashScreen>
     return Scaffold(
       body: Stack(
         children: [
-          // Gradient background
           Container(
             width: double.infinity,
             height: double.infinity,
@@ -92,14 +89,12 @@ class _SplashScreenState extends State<SplashScreen>
               ),
             ),
           ),
-          // Background SVG pattern
           Positioned.fill(
             child: SvgPicture.asset(
               "assets/svg/bg.svg",
               fit: BoxFit.cover,
             ),
           ),
-          // Logo in center
           Center(
             child: Padding(
               padding: const EdgeInsets.all(20.0),
@@ -113,74 +108,6 @@ class _SplashScreenState extends State<SplashScreen>
           ),
         ],
       ),
-      // body: Stack(
-      //   children: [
-      //     // Gradient background
-      //     Container(
-      //       width: double.infinity,
-      //       height: double.infinity,
-      //       decoration: const BoxDecoration(
-      //         gradient: LinearGradient(
-      //           colors: [Color(0xFF16CA8B), Color(0xFF109365)],
-      //           begin: Alignment.topCenter,
-      //           end: Alignment.bottomCenter,
-      //         ),
-      //       ),
-      //     ),
-
-      //     // Top circle animation
-      //     Positioned(
-      //       top: -600,
-      //       right: -300,
-      //       child: SlideTransition(
-      //         position: _topCircleOffset,
-      //         child: buildCircle(
-      //           height: size.height * 1.4,
-      //           width: size.width * 1.4,
-      //         ),
-      //       ),
-      //     ),
-
-      //     // Bottom circle animation
-      //     Positioned(
-      //       bottom: -600,
-      //       left: -300,
-      //       child: SlideTransition(
-      //         position: _bottomCircleOffset,
-      //         child: buildCircle(
-      //           height: size.height * 1.4,
-      //           width: size.width * 1.4,
-      //         ),
-      //       ),
-      //     ),
-
-      //     // Logo fade animation
-      //     Positioned(
-      //       top: size.height * 0.35,
-      //       left: 0,
-      //       right: 0,
-      //       child: FadeTransition(
-      //         opacity: _logoOpacity,
-      //         child: Column(
-      //           mainAxisAlignment: MainAxisAlignment.center,
-      //           children: [
-      //             SvgPicture.asset(
-      //               "assets/svg/Group.svg",
-      //               width: size.width * 0.3,
-      //               height: size.height * 0.15,
-      //               fit: BoxFit.contain,
-      //             ),
-      //             const SizedBox(height: 16),
-      //             Image.asset(
-      //               "assets/images/Name.png",
-      //               width: size.width * 0.4,
-      //             ),
-      //           ],
-      //         ),
-      //       ),
-      //     ),
-      //   ],
-      // ),
     );
   }
 }

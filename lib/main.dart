@@ -20,7 +20,6 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
 
-  // تهيئة OneSignal
   OneSignal.initialize("05ccd9f6-8cee-4750-a52c-46daba72fdc1");
   OneSignal.Notifications.requestPermission(true);
   OneSignal.Notifications.addClickListener((event) {
@@ -29,7 +28,6 @@ Future<void> main() async {
     debugPrint('🟢 Notification Clicked: $title, Data: $data');
   });
 
-  // تهيئة خدمة الإشعارات المحلية
   await NotificationService().initialize();
 
   final token = (await SharedPreferencesHelper.getUser())?.token;
@@ -39,10 +37,7 @@ Future<void> main() async {
   await startSendingLiveLocation();
   await invokeNearbyShipment();
 
-  // بدء التحديث الدوري كل 30 ثانية
   _startPeriodicUpdate();
-
-  // Run app
   runApp(
     ProviderScope(
       child: ScreenUtilInit(
@@ -59,7 +54,6 @@ Future<void> main() async {
   );
 }
 
-// دالة لبدء التحديث الدوري
 void _startPeriodicUpdate() {
   _periodicUpdateTimer =
       Timer.periodic(const Duration(seconds: 5), (timer) async {
@@ -89,16 +83,11 @@ class _MyAppState extends ConsumerState<MyApp> {
   void initState() {
     super.initState();
 
-    // Show in-app dialog for foreground notifications
     OneSignal.Notifications.addForegroundWillDisplayListener((event) {
       final title = event.notification.title;
       final body = event.notification.body;
-
       debugPrint('📩 Foreground Notification: $title - $body');
-
-      event.preventDefault(); // prevent system notification
-
-      // Show dialog with context after build
+      event.preventDefault();
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showDialog(
           context: context,
